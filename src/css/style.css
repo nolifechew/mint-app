@@ -359,7 +359,7 @@ template {
 
 @font-face {
 	font-family: EternalUI-Bold;
-	src: url("../fonts/EternalUiBold.eot");
+	src: url("../fonts/EternalUI-Bold.ttf");
 	
 	font-weight: normal;
 	font-style: normal;
@@ -367,7 +367,7 @@ template {
 
 @font-face {
 	font-family: SecretPower;
-	src: url("../fonts/SecretPower.eot");
+	src: url("../fonts/SecretPower.ttf");
 	
 	font-weight: normal;
 	font-style: normal;
