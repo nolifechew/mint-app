@@ -586,6 +586,9 @@ function App() {
 
     const merkleTreeRoot = await _merkleTree.getHexRoot();
 
+    console.log("root =");
+    console.log(merkleTreeRoot);
+
     merkleTree = _merkleTree;
 
   } 
