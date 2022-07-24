@@ -619,7 +619,7 @@ function App() {
 <div className="wrapper">
   
   <header className="header">
-    <a href="index.html" className="header-logo"></a>
+    {/*<a href="index.html" className="header-logo"></a>*/}
     <div className="menu-toggle">
       <span></span>
       <span></span>
