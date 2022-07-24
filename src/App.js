@@ -32,6 +32,7 @@ let mintingObject;
 let publicPrice = 0;
 let whitelistPrice = 0;
 let mintPassPrice = 0;
+let isPublicMint = false;
 
 //TODO: change this
 const isTestNet = true;
@@ -41,9 +42,6 @@ function App() {
   const [btnText, setBtnText] = useState("");
   const [amountToMint, setAmountToMint] = useState(0);
 
-  const [isPublicMint, setIsPublicMint] = useState(0);
-
-  //TODO: set the max amount based on whitelists
   const [maxAmount, setMaxAmount] = useState(0);
 
   const [mintCost, setMintCost] = useState(0);
@@ -138,22 +136,26 @@ function App() {
 
     yugen = yugenObject;
 
+    await getIsPublicMint();
+
     await setPrices();
 
     await getWhitelistAmounts();
 
     getText();
 
-    getIsPublicMint(yugenObject);
+   
 
 
   }
 
-  const getIsPublicMint = async (yugenObject) => {
+  const getIsPublicMint = async () => {
 
-    const isPub = await yugenObject.methods.isPublicMint().call();
+    const isPub = await yugen.methods.isPublicMint().call();
 
-    setIsPublicMint(isPub);
+    console.log("is public mint");
+
+    isPublicMint = isPub;
 
   }
 
@@ -233,7 +235,7 @@ function App() {
 
     console.log(mintingObject);
 
-    if(mintingObject !== null) {
+    if(mintingObject !== null && mintingObject !== undefined) {
     
       for(let i = 2; i > 0; i--) {
 
@@ -397,7 +399,6 @@ function App() {
     console.log("mint clicked");
 
     if(connectedWallet === "") return;
-    if(mintingObject == null) return;
 
     let types = [];
 
@@ -418,51 +419,54 @@ function App() {
     let price = getPrice(amountToMint);
 
     console.log("price: ", price);
+
+    if(mintingObject !== null && mintingObject !== undefined) {
     
-    for(let i = 2; i > 0; i--) {
+      for(let i = 2; i > 0; i--) {
 
-      if(amountLeftToMint === 0) {
-        break;
-      }
+        if(amountLeftToMint === 0) {
+          break;
+        }
 
-      if(i in mintingObject) {
+        if(i in mintingObject) {
 
-        const obj = mintingObject[i];
+          const obj = mintingObject[i];
 
-        let leftOfType = obj.maxAmount - obj.amountMinted;
+          let leftOfType = obj.maxAmount - obj.amountMinted;
 
-        if(leftOfType > 0) {
+          if(leftOfType > 0) {
 
-          if(leftOfType > amountLeftToMint) {
-            leftOfType = amountLeftToMint;
+            if(leftOfType > amountLeftToMint) {
+              leftOfType = amountLeftToMint;
+            }
+
+            amounts.push(leftOfType);
+            maxAmounts.push(obj.maxAmount);
+            proofs.push(obj.proof.proof);
+            types.push(i);
+
+            amountLeftToMint -= leftOfType;
+
           }
-
-          amounts.push(leftOfType);
-          maxAmounts.push(obj.maxAmount);
-          proofs.push(obj.proof.proof);
-          types.push(i);
-
-          amountLeftToMint -= leftOfType;
 
         }
 
       }
 
-    }
+      if(amountLeftToMint > 0) {
 
-    if(amountLeftToMint > 0) {
+        if(0 in mintingObject) {
 
-      if(0 in mintingObject) {
+          //has whitelist
+          const obj = mintingObject[0];
+          amounts.push(amountLeftToMint);
+          maxAmounts.push(obj.maxAmount);
+          proofs.push(obj.proof.proof);
+          types.push(0);
 
-        //has whitelist
-        const obj = mintingObject[0];
-        amounts.push(amountLeftToMint);
-        maxAmounts.push(obj.maxAmount);
-        proofs.push(obj.proof.proof);
-        types.push(0);
+        }
 
       }
-
     }
 
     if(types.length > 0) {
@@ -481,8 +485,17 @@ function App() {
     } else if(isPublicMint) {
 
       price = (amountLeftToMint * publicPrice);
+      
+      setWhitelistText("Minting");
 
-      await yugen.methods.publicMint(amountLeftToMint).send({value : price});
+      await yugen.methods.publicMint(amountLeftToMint).send({from : connectedWallet, value : price}).on('receipt', function(receipt){
+
+        setAmountToMint(0);
+        
+        mintingObject = null;
+        setupWeb3();
+
+      });
 
     }
   
