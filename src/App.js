@@ -14,8 +14,6 @@ import discord2img from "./img/ico_discord-2.svg";
 
 const keccak256 = require("keccak256");
 
-
-
 // Config
 const { 
 
@@ -40,18 +38,10 @@ const isTestNet = true;
 
 function App() {
 
-  // const [merkleTree, setMerkleTree] = useState(null);
-
   const [btnText, setBtnText] = useState("");
-  const [isDisabled, setDisabled] = useState(false)
-  //const [metaMaskInstalled, setMetaMaskInstalled] = useState("")
-  const [walletAddress, setWallet] = useState("");
   const [amountToMint, setAmountToMint] = useState(0);
 
-  
-
   const [isPublicMint, setIsPublicMint] = useState(0);
-
 
   //TODO: set the max amount based on whitelists
   const [maxAmount, setMaxAmount] = useState(0);
@@ -62,9 +52,6 @@ function App() {
 
   const { ethereum } = window;
 
-  
-
-
   const initDapp = async () => {
     
     generateMerkleTree();
@@ -74,7 +61,7 @@ function App() {
     if (isMetaMaskInstalled()) {
       // Get current wallet connected (useful after refresh of page and used to display in the button that you are already connected)
       const { address } = await getCurrentWalletConnected(); 
-      setWallet(address);
+      connectedWallet = address;
 
       // Add wallet listener to handle account changes by the user
       addWalletListener();
@@ -214,10 +201,10 @@ function App() {
         console.log(addressArray);
         
         if (addressArray.length > 0) {
-            setWallet(addressArray[0])
+            connectedWallet = addressArray[0];
             setBtnText("Mint")
             setupWeb3();
-            connectedWallet = addressArray[0];
+           
             return {
               address: addressArray[0],
             };
@@ -388,20 +375,19 @@ function App() {
         if (accounts.length > 0) {
 
           connectedWallet = accounts[0];
-          setWallet(accounts[0]);
           setBtnText("Mint")
           mintingObject = null;
 
           setupWeb3();
 
         } else {
-          setWallet("");
+          connectedWallet = "";
           setBtnText("Connect");
           setMaxAmount(0);
         }
       });
     } else {
-      setWallet("");
+      connectedWallet = "";
       setBtnText("No window.ethereum object found");
     }
   }
@@ -479,19 +465,11 @@ function App() {
 
     }
 
-    console.log("price: ", price);
-
     if(types.length > 0) {
-
-      console.log("we are attempting to mint");
-      console.log("types: ", types);
-      console.log("maxAmounts: ", maxAmounts);
-      console.log("proofs: ", proofs);
 
       setWhitelistText("Minting");
 
       await yugen.methods.whitelistMint(proofs, amounts, types, maxAmounts).send({from : connectedWallet, value : price}).on('receipt', function(receipt){
-        console.log('receipt');
 
         setAmountToMint(0);
         
@@ -499,8 +477,6 @@ function App() {
         setupWeb3();
 
       });
-
-      
 
     } else if(isPublicMint) {
 
