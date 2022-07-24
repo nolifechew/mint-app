@@ -171,6 +171,7 @@ textarea {
 	font-size: 100%; /* 1 */
 	line-height: 1.15; /* 1 */
 	margin: 0; /* 2 */
+	outline: none;
 }
 
 /**
@@ -181,6 +182,7 @@ textarea {
 button,
 input { /* 1 */
 	overflow: visible;
+	outline: none;
 }
 
 /**
@@ -191,6 +193,7 @@ input { /* 1 */
 button,
 select { /* 1 */
 	text-transform: none;
+	outline: none;
 }
 
 /**
@@ -214,6 +217,7 @@ button::-moz-focus-inner,
 [type="submit"]::-moz-focus-inner {
 	border-style: none;
 	padding: 0;
+	outline: none;
 }
 
 /**
@@ -225,6 +229,15 @@ button:-moz-focusring,
 [type="reset"]:-moz-focusring,
 [type="submit"]:-moz-focusring {
 	outline: 1px dotted ButtonText;
+}
+
+button {
+	outline: none;
+	border: none;
+}
+
+button:focus {
+	outline: none;
 }
 
 /**
@@ -2662,6 +2675,7 @@ p {
 	-moz-background-size: cover;
 	background-size: cover;
 	cursor: pointer;
+	outline: none;
 }
 
 .mint-form__plus {
@@ -2672,6 +2686,7 @@ p {
 	-moz-background-size: cover;
 	background-size: cover;
 	cursor: pointer;
+	outline: none;
 }
 
 .mint-form__count {
@@ -2733,6 +2748,7 @@ p {
 	color: #82007c;
 	font: 1.8rem/1em EternalUI-Bold, sans-serif;
 	text-transform: uppercase;
+	outline: none;
 }
 
 input[type="number"]::-webkit-outer-spin-button,
@@ -4477,6 +4493,7 @@ html {
 	font-size: 18px;
 	margin-top: 30px;
 	padding: 10px 20px;
+	outline: none;
 }
 
 }
