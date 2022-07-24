@@ -558,17 +558,6 @@ function App() {
 
   }
 
-  // Converts any given account address into the following format: 0x1234...6789
-  const addressFormatter = (account) => {
-    return (
-        "Connected: " +
-        String(account).substring(0, 6) +
-        "..." +
-        String(account).substring(38)
-    )          
-  }  
-
-
   const generateMerkleTree = async () => {
 
     let leafArray = []
