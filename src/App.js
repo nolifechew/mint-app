@@ -35,7 +35,7 @@ let mintPassPrice = 0;
 let isPublicMint = false;
 
 //TODO: change this
-const isTestNet = true;
+const isTestNet = false;
 
 function App() {
 
@@ -53,15 +53,11 @@ function App() {
   const initDapp = async () => {
     
     generateMerkleTree();
-    // Check whether MetaMask is installed
     MetaMaskClientCheck();
         
     if (isMetaMaskInstalled()) {
-      // Get current wallet connected (useful after refresh of page and used to display in the button that you are already connected)
       const { address } = await getCurrentWalletConnected(); 
       connectedWallet = address;
-
-      // Add wallet listener to handle account changes by the user
       addWalletListener();
 
     }
@@ -196,11 +192,7 @@ function App() {
 
   const onClickConnect = async () => {
     try {
-        // Note: This part will trigger the MetaMask pop-up if you are either logged out of your wallet or logged in but not connected to any account. 
-        // There won't be a pop-up window if you are already connected with an account
         const addressArray = await ethereum.request({ method: 'eth_requestAccounts' });
-
-        console.log(addressArray);
         
         if (addressArray.length > 0) {
             connectedWallet = addressArray[0];
@@ -216,8 +208,8 @@ function App() {
               address: "",
             };
           };
-    } catch (error) { // Wwhen user rejects the request
-        //setDisabled(false);                       
+    } catch (error) { 
+                           
         console.error(error);
         return {
             address: ""
@@ -231,10 +223,6 @@ function App() {
 
     let amountLeftToMint = _amountToMint;
 
-    console.log(amountLeftToMint);
-
-    console.log(mintingObject);
-
     if(mintingObject !== null && mintingObject !== undefined) {
     
       for(let i = 2; i > 0; i--) {
@@ -245,19 +233,13 @@ function App() {
 
         if(i in mintingObject) {
 
-          console.log(i, " in minting object");
-
           const obj = mintingObject[i];
 
           let leftOfType = obj.maxAmount - obj.amountMinted;
 
-          console.log("left of type before: ", leftOfType)
-
           if(leftOfType > amountLeftToMint) {
             leftOfType = amountLeftToMint;
           }
-
-          console.log("left of type: ", leftOfType)
 
           if(leftOfType > 0) {
 
@@ -280,8 +262,6 @@ function App() {
       if(amountLeftToMint > 0) {
 
         if(0 in mintingObject) {
-
-          console.log("has whitelist");
 
           //has whitelist
           price += (whitelistPrice * amountLeftToMint);
@@ -311,11 +291,8 @@ function App() {
       console.log("wallet address is none")
     };
 
-    console.log("wallet = ", connectedWallet);
 
     if(connectedWallet in whitelistObject === false) {
-
-      console.log("not in whitelist");
 
       if(isPublicMint) {
 
@@ -324,10 +301,6 @@ function App() {
       }
 
       return;
-
-    } else {
-
-      console.log("in whitelist object");
 
     }
 
@@ -370,7 +343,6 @@ function App() {
     
   }
 
-  // Wallet listener to handle accounts changes by the user
   function addWalletListener() {
     if (ethereum) {
       ethereum.on("accountsChanged", (accounts) => {
@@ -414,11 +386,7 @@ function App() {
       return;
     }
 
-    console.log("amount to mint: ", amountToMint);
-
     let price = getPrice(amountToMint);
-
-    console.log("price: ", price);
 
     if(mintingObject !== null && mintingObject !== undefined) {
     
@@ -516,8 +484,6 @@ function App() {
   }
 
   const getText = () => {
-
-    console.log("getting text");
 
     let text = "";
 
@@ -620,7 +586,8 @@ function App() {
 
     const merkleTreeRoot = await _merkleTree.getHexRoot();
 
-    console.log("hexroot: ", merkleTreeRoot);
+    console.log("root =");
+    console.log(merkleTreeRoot);
 
     merkleTree = _merkleTree;
 
@@ -676,7 +643,7 @@ function App() {
           <div className="mint-form">
             <h3 className="mint-form__total">{mintCost > 0 ? mintCost.toFixed(2) + " Eth" : "0 Eth"}</h3>
 
-              <p className="mint-form__text"> <span id="mint-form__text_span">{whitelistText}</span></p>
+              {whitelistText.length > 0 ?  <p className="mint-form__text"> <span id="mint-form__text_span">{whitelistText}</span></p> : null }
             
             <div className="mint-form__calc">
               <button className="mint-form__minus" onClick={
