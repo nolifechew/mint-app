@@ -140,9 +140,6 @@ function App() {
 
     getText();
 
-   
-
-
   }
 
   const getIsPublicMint = async () => {
@@ -220,6 +217,8 @@ function App() {
   const getPrice = (_amountToMint) => {
 
     let price = 0;
+
+    console.log(connectedWallet);
 
     let amountLeftToMint = _amountToMint;
 
