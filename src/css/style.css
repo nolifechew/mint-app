@@ -2748,6 +2748,7 @@ p {
 	font: 1.8rem/1em EternalUI-Bold, sans-serif;
 	text-transform: uppercase;
 	outline: none;
+	cursor: pointer;
 }
 
 input[type="number"]::-webkit-outer-spin-button,
