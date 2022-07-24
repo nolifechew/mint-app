@@ -7,6 +7,11 @@ import Web3 from 'web3';
 
 import {MerkleTree} from "merkletreejs";
 
+import twitterimg from "./img/ico_twitter.svg";
+import discordimg from "./img/ico_discord.svg";
+import twitter2img from "./img/ico_twitter-2.svg";
+import discord2img from "./img/ico_discord-2.svg";
+
 const keccak256 = require("keccak256");
 
 
@@ -595,8 +600,8 @@ function App() {
     </div>
     <div className="header-menu">
       <div className="header-socials">
-        <a href="https://twitter.com/Yugennft" target="_blank"><img src="img/ico_twiter.svg" alt=""></img></a>
-        <a href="http://www.discord.gg/yugencity" target="_blank"><img src="img/ico_discord.svg" alt=""></img></a>
+        <a href="https://twitter.com/Yugennft" target="_blank"><img src={twitterimg} alt="social"></img></a>
+        <a href="http://www.discord.gg/yugencity" target="_blank"><img src={discordimg} alt="social"></img></a>
         
       </div>
       <ul className="header-nav">
@@ -654,7 +659,7 @@ function App() {
               <div className="mint-form__count">
                 <input type="number" value={amountToMint} id="mintAmount"></input>
               </div>
-              <button className="mint-form__plus" onClick={ () => {
+              <button className="mint-form__plus" style={{outline: 'none'}} onClick={ () => {
 
 
                 console.log("plus");
@@ -680,8 +685,8 @@ function App() {
     <div className="footer-bg"></div>
     <div className="container">
       <div className="footer-socials">
-        <a href="https://twitter.com/Yugennft" target="_blank"><img src="img/ico_twiter-2.svg" alt="social"></img></a>
-        <a href="http://www.discord.gg/yugencity" target="_blank"><img src="img/ico_discord-2.svg" alt="social"></img></a>
+        <a href="https://twitter.com/Yugennft" target="_blank"><img src={twitter2img} alt="social"></img></a>
+        <a href="http://www.discord.gg/yugencity" target="_blank"><img src={discord2img} alt="social"></img></a>
        
       <p className="footer-copy">Copyright © 2022</p>
     </div>
