@@ -179,7 +179,7 @@ function App() {
         });
         if (addressArray.length > 0) {
             setBtnText(addressFormatter(addressArray[0]));
-            setDisabled(true);
+            //setDisabled(true);
             
             setupWeb3();
             connectedWallet = addressArray[0]
@@ -228,7 +228,7 @@ function App() {
             };
           };
     } catch (error) { // Wwhen user rejects the request
-        setDisabled(false);                       
+        //setDisabled(false);                       
         console.error(error);
         return {
             address: ""
@@ -242,9 +242,13 @@ function App() {
 
     let amountLeftToMint = _amountToMint;
 
+    console.log(amountLeftToMint);
+
+    console.log(mintingObject);
+
     if(mintingObject !== null) {
     
-      for(let i = 1; i <= 2; i++) {
+      for(let i = 2; i > 0; i--) {
 
         if(amountLeftToMint === 0) {
           break;
@@ -252,9 +256,19 @@ function App() {
 
         if(i in mintingObject) {
 
+          console.log(i, " in minting object");
+
           const obj = mintingObject[i];
 
-          const leftOfType = obj.maxAmount - obj.amountMinted;
+          let leftOfType = obj.maxAmount - obj.amountMinted;
+
+          console.log("left of type before: ", leftOfType)
+
+          if(leftOfType > amountLeftToMint) {
+            leftOfType = amountLeftToMint;
+          }
+
+          console.log("left of type: ", leftOfType)
 
           if(leftOfType > 0) {
 
@@ -278,10 +292,11 @@ function App() {
 
         if(0 in mintingObject) {
 
+          console.log("has whitelist");
+
           //has whitelist
           price += (whitelistPrice * amountLeftToMint);
           amountLeftToMint = 0;
-
 
         }
       }
@@ -294,15 +309,7 @@ function App() {
 
     }
 
-    let etherValue = ethers.utils.formatEther(price.toString());
-
-    console.log("ether value = ", etherValue);
-
-    etherValue = parseFloat(etherValue);
-
-    console.log("ether value = ", etherValue);
-
-    setMintCost(etherValue);
+    return price;
 
   }
 
@@ -310,7 +317,6 @@ function App() {
 
     let obj = {};
 
-    
 
     if(connectedWallet === "") {
       console.log("wallet address is none")
@@ -327,6 +333,8 @@ function App() {
         setMaxAmount(20);
 
       }
+
+      return;
 
     } else {
 
@@ -396,7 +404,9 @@ function App() {
 
   const Mint = async () => {
 
-    if(walletAddress === "") return;
+    console.log("mint clicked");
+
+    if(connectedWallet === "") return;
     if(mintingObject == null) return;
 
     let types = [];
@@ -409,9 +419,17 @@ function App() {
 
     let amountLeftToMint = amountToMint;
 
-    let price = 0;
+    if(amountLeftToMint === 0) {
+      return;
+    }
+
+    console.log("amount to mint: ", amountToMint);
+
+    let price = getPrice(amountToMint);
+
+    console.log("price: ", price);
     
-    for(let i = 1; i <= 2; i++) {
+    for(let i = 2; i > 0; i--) {
 
       if(amountLeftToMint === 0) {
         break;
@@ -421,24 +439,20 @@ function App() {
 
         const obj = mintingObject[i];
 
-        const leftOfType = obj.maxAmount - obj.amountMinted;
+        let leftOfType = obj.maxAmount - obj.amountMinted;
 
         if(leftOfType > 0) {
 
+          if(leftOfType > amountLeftToMint) {
+            leftOfType = amountLeftToMint;
+          }
+
           amounts.push(leftOfType);
           maxAmounts.push(obj.maxAmount);
-          proofs.push(obj.proof);
+          proofs.push(obj.proof.proof);
           types.push(i);
 
           amountLeftToMint -= leftOfType;
-
-          let typePrice = 0;
-
-          if(i === 1) {
-            typePrice = mintPassPrice;
-          }
-
-          price += (typePrice * leftOfType)
 
         }
 
@@ -454,18 +468,23 @@ function App() {
         const obj = mintingObject[0];
         amounts.push(amountLeftToMint);
         maxAmounts.push(obj.maxAmount);
-        proofs.push(obj.proof);
+        proofs.push(obj.proof.proof);
         types.push(0);
 
-        price += (whitelistPrice * amountLeftToMint);
-
-
       }
+
     }
 
-    if(price > 0) {
+    console.log("price: ", price);
 
-      await yugen.methods.whitelistMint(proofs, amounts, types, maxAmounts).send({value : price});
+    if(types.length > 0) {
+
+      console.log("we are attempting to mint");
+      console.log("types: ", types);
+      console.log("maxAmounts: ", maxAmounts);
+      console.log("proofs: ", proofs);
+
+      await yugen.methods.whitelistMint(proofs, amounts, types, maxAmounts).send({from : connectedWallet, value : price});
 
     } else if(isPublicMint) {
 
@@ -483,7 +502,7 @@ function App() {
 
     let text = "";
 
-    for(let i = 1; i <= 2; i++) {
+    for(let i = 2; i > 0; i--) {
 
       if(i in whitelistObject === false) continue;
 
@@ -637,7 +656,7 @@ function App() {
                   Per Stable Key: 3
                   Per Ionized Key: 2
                   Whitelist and Public: Unlimited</p>
-          <form action="" className="mint-form">
+          <div className="mint-form">
             <h3 className="mint-form__total">{mintCost > 0 ? mintCost.toFixed(2) + " Eth" : "0 Eth"}</h3>
 
             { whitelistText.length > 0 && (
@@ -647,13 +666,19 @@ function App() {
               <button className="mint-form__minus" onClick={
                 () => {
 
-                  console.log("minus");
                   if(amountToMint - 1 < 0) {
                     return;
                   }
 
                   setAmountToMint(amountToMint - 1);
-                  getPrice(amountToMint - 1);
+                  const price = getPrice(amountToMint - 1);
+                  let etherValue = ethers.utils.formatEther(price.toString());
+              
+                  etherValue = parseFloat(etherValue);
+
+                  setMintCost(etherValue);
+              
+                  
                 }
               }></button>
               <div className="mint-form__count">
@@ -661,21 +686,24 @@ function App() {
               </div>
               <button className="mint-form__plus" style={{outline: 'none'}} onClick={ () => {
 
-
-                console.log("plus");
                 if(amountToMint + 1 > maxAmount) {
                   return;
                 }
 
                 setAmountToMint(amountToMint + 1);
-                getPrice(amountToMint + 1);
+                const price = getPrice(amountToMint + 1);
+                let etherValue = ethers.utils.formatEther(price.toString());
+              
+                  etherValue = parseFloat(etherValue);
+
+                  setMintCost(etherValue);
 
               }
                 
               }></button>
             </div>
-            <button className="mint-form__button" onClick={isDisabled ? null : walletAddress === "" ? onClickConnect : Mint}>{btnText}</button>
-          </form>
+            <button className="mint-form__button" onClick={connectedWallet === "" ? onClickConnect : Mint}>{btnText}</button>
+          </div>
         </div>
       </div>
     </div>
