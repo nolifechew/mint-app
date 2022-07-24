@@ -616,8 +616,8 @@ function App() {
     </div>
     <div className="header-menu">
       <div className="header-socials">
-        <a href="https://twitter.com/Yugennft" ><img src={twitterimg} alt="social"></img></a>
-        <a href="http://www.discord.gg/yugencity" ><img src={discordimg} alt="social"></img></a>
+        <a href="https://twitter.com/Yugennft" target="_blank" rel="noopener noreferrer"><img src={twitterimg}  alt="social"></img></a>
+        <a href="http://www.discord.gg/yugencity" target="_blank" rel="noopener noreferrer"><img src={discordimg} alt="social"></img></a>
         
       </div>
       <ul className="header-nav">
@@ -704,8 +704,8 @@ function App() {
     <div className="footer-bg"></div>
     <div className="container">
       <div className="footer-socials">
-        <a href="https://twitter.com/Yugennft" ><img src={twitter2img} alt="social"></img></a>
-        <a href="http://www.discord.gg/yugencity" ><img src={discord2img} alt="social"></img></a>
+        <a href="https://twitter.com/Yugennft" target="_blank" rel="noopener noreferrer"><img src={twitter2img} alt="social"></img></a>
+        <a href="http://www.discord.gg/yugencity" target="_blank" rel="noopener noreferrer"><img src={discord2img} alt="social"></img></a>
       </div>
       <p className="footer-copy">Copyright © 2022</p>
     </div>
