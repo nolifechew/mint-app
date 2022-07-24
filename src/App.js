@@ -153,7 +153,7 @@ function App() {
 
     await setPrices();
 
-    getWhitelistAmounts();
+    await getWhitelistAmounts();
 
     getText();
 
@@ -178,7 +178,7 @@ function App() {
           method: "eth_accounts",
         });
         if (addressArray.length > 0) {
-            setBtnText(addressFormatter(addressArray[0]));
+            setBtnText("Mint");
             //setDisabled(true);
             
             setupWeb3();
@@ -215,7 +215,7 @@ function App() {
         
         if (addressArray.length > 0) {
             setWallet(addressArray[0])
-            setBtnText(addressFormatter(addressArray[0]))
+            setBtnText("Mint")
             setupWeb3();
             connectedWallet = addressArray[0];
             return {
@@ -386,13 +386,17 @@ function App() {
     if (ethereum) {
       ethereum.on("accountsChanged", (accounts) => {
         if (accounts.length > 0) {
+
+          connectedWallet = accounts[0];
           setWallet(accounts[0]);
-          setBtnText(addressFormatter(accounts[0]))
+          setBtnText("Mint")
+          mintingObject = null;
+          
+          setupWeb3();
 
         } else {
           setWallet("");
           setBtnText("Connect");
-          setDisabled(false);
           setMaxAmount(0);
         }
       });
@@ -500,13 +504,36 @@ function App() {
 
   const getText = () => {
 
+    console.log("getting text");
+
     let text = "";
+
+    console.log(mintingObject);
+
+    if(mintingObject == null) {
+
+      if(isPublicMint) {
+
+        text = "Public Mint"
+
+      } else {
+        text = "Wait till Public Mint";
+      }
+
+      setWhitelistText(text);
+
+      return;
+
+    }
 
     for(let i = 2; i > 0; i--) {
 
-      if(i in whitelistObject === false) continue;
+      if(i in mintingObject === false) {
+        console.log("not in whitelist object");
+        continue;
+      }
 
-      const obj = whitelistObject[i];
+      const obj = mintingObject[i];
 
       const numLeftToMint = obj.maxAmount - obj.amountMinted;
 
@@ -524,11 +551,11 @@ function App() {
         text += "Free Mints: ";
       }
 
-      text += amountToMint.toString();
+      text += numLeftToMint.toString();
 
     }
 
-    if(0 in whitelistObject) {
+    if(0 in mintingObject) {
 
       if(text.length > 0) {
         text += ", "
@@ -536,15 +563,8 @@ function App() {
 
       text += "Whitelist Mints: Unlimited";
 
-    } else if(isPublicMint) {
-
-      if(text.length > 0) {
-        text += ", "
-      }
-
-      text += "Public Mints: Unlimited";
-
     }
+
 
     setWhitelistText(text);
 
@@ -659,9 +679,8 @@ function App() {
           <div className="mint-form">
             <h3 className="mint-form__total">{mintCost > 0 ? mintCost.toFixed(2) + " Eth" : "0 Eth"}</h3>
 
-            { whitelistText.length > 0 && (
-              <p className="mint-form__text">{whitelistText}</p>
-            )}
+              <p className="mint-form__text"> <span id="mint-form__text_span">{whitelistText}</span></p>
+            
             <div className="mint-form__calc">
               <button className="mint-form__minus" onClick={
                 () => {
