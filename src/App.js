@@ -621,13 +621,8 @@ function App() {
         
       </div>
       <ul className="header-nav">
-        <li className="glitch-hover"><a href="index.html#promo" className="glitching" data-text="Home">Home</a></li>
-        <li className="glitch-hover"><a href="index.html#club" className="glitching" data-text="Cyber City">Cyber City</a></li>
-        <li className="glitch-hover"><a href="index.html#rinen" className="glitching" data-text="Tao">Tao</a></li>
-        <li className="glitch-hover"><a href="index.html#strategy" className="glitching" data-text="Story">Story</a></li>
-        <li className="glitch-hover"><a href="index.html#team" className="glitching" data-text="Team">Team</a></li>
-        <li className="glitch-hover"><a href="index.html#faq" className="glitching" data-text="FAQ">FAQ</a></li>
-        <li className="glitch-hover"><a href=".mint" className="go_to glitching" data-text="mint">mint</a></li>
+        <li className="glitch-hover"><a href="https://www.yugen-nft.com/" className="glitching" data-text="Back To Site">Back To Site</a></li>
+        
       </ul>
     </div>
   </header>
@@ -711,9 +706,8 @@ function App() {
       <div className="footer-socials">
         <a href="https://twitter.com/Yugennft" ><img src={twitter2img} alt="social"></img></a>
         <a href="http://www.discord.gg/yugencity" ><img src={discord2img} alt="social"></img></a>
-       
+      </div>
       <p className="footer-copy">Copyright © 2022</p>
-    </div>
     </div>
   </footer>
   
