@@ -2625,7 +2625,6 @@ p {
 	color: #fff;
 	text-transform: uppercase;
 	font: 1.6rem/1.4em EternalUI-Bold, sans-serif;
-	visibility: hidden;
 }
 
 .mint-form__text span {

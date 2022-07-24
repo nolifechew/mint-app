@@ -1,11 +1,9 @@
 import "./css/style.css";
-import { useState, useEffect, useCallback } from "react";
-import { providerOptions } from "./providerOptions";
-import Web3Modal from "web3modal";
+import { useState, useEffect } from "react";
+//import { providerOptions } from "./providerOptions";
+//import Web3Modal from "web3modal";
 import { ethers } from "ethers";
 import Web3 from 'web3';
-
-import MetaMaskOnboarding from '@metamask/onboarding'
 
 import {MerkleTree} from "merkletreejs";
 
@@ -23,35 +21,43 @@ const {
 	
 }  = require('./values/config');
 
+const whitelistObject = require("./values/whitelist.json");
+let merkleTree;
+let yugen;
+let connectedWallet = "";
+let mintingObject;
+let publicPrice = 0;
+let whitelistPrice = 0;
+let mintPassPrice = 0;
+
+//TODO: change this
+const isTestNet = true;
+
 function App() {
 
-  const [merkleTree, setMerkleTree] = useState(null);
-  const [whitelistObject, setWhitelistObject] = useState(null);
+  // const [merkleTree, setMerkleTree] = useState(null);
 
   const [btnText, setBtnText] = useState("");
   const [isDisabled, setDisabled] = useState(false)
-  const [metaMaskInstalled, setMetaMaskInstalled] = useState("")
+  //const [metaMaskInstalled, setMetaMaskInstalled] = useState("")
   const [walletAddress, setWallet] = useState("");
   const [amountToMint, setAmountToMint] = useState(0);
-  const [whitelistPrice, setWhitelistPrice] = useState(0);
-  const [mintPassPrice, setMintPassPrice] = useState(0);
-  const [publicPrice, setPublicPrice] = useState(0);
+
+  
 
   const [isPublicMint, setIsPublicMint] = useState(0);
 
-  const [web3Object, setWeb3] = useState(null);
-
-  const [yugen, setYugen] = useState(null);
-
-  const [mintingObject, setMintingObject] = useState(null);
 
   //TODO: set the max amount based on whitelists
-  const [maxAmount, setMaxAmount] = useState(5);
+  const [maxAmount, setMaxAmount] = useState(0);
 
+  const [mintCost, setMintCost] = useState(0);
 
-  const onboarding = new MetaMaskOnboarding();
+  const [whitelistText, setWhitelistText] = useState("");
 
   const { ethereum } = window;
+
+  
 
 
   const initDapp = async () => {
@@ -68,39 +74,35 @@ function App() {
       // Add wallet listener to handle account changes by the user
       addWalletListener();
 
-
     }
-
     
   };
 
   useEffect(() => {
     initDapp();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Check whether MetaMask Chrome extension is installed
   const isMetaMaskInstalled = () => {
     const isInstalled = Boolean(ethereum && ethereum.isMetaMask);
-    setMetaMaskInstalled(isInstalled);
+    //setMetaMaskInstalled(isInstalled);
     return isInstalled;
   };
 
-  //TODO: add this in
   const setPrices = async () => {
 
-    if(yugen == null) {
-      return;
-    }
+    publicPrice = await yugen.methods.price().call();
 
-    setPublicPrice(await yugen.methods.price().call());
-    setWhitelistPrice(await yugen.methods.whitelistPrice().call());
-    setMintPassPrice(await yugen.methods.mintpassPrice().call());
+    whitelistPrice = await yugen.methods.whitelistPrice().call();
+
+    mintPassPrice = await yugen.methods.mintPassPrice().call();
 
   }
 
   function getHexProof(address, type) {
 
-    if(address in whitelistObject == false || type in whitelistObject[address] == false) {
+    if(address in whitelistObject === false || type in whitelistObject[address] === false) {
       console.log("no proof");
       return false;
     }
@@ -111,19 +113,6 @@ function App() {
   
     
     return {"proof" : merkleTree.getHexProof(hashedLeaf), "maxAmount" : amount };
-  
-  }
-  
-  function getAllProofs(address) {
-  
-    let result = {}
-  
-    for(let i = 0; i < 3; i++) {
-  
-      result[i] = getHexProof(address, i);
-    }
-  
-    return result;
   
   }
 
@@ -141,20 +130,38 @@ function App() {
 
     let web = new Web3(window.ethereum);
 
-    setWeb3(web);
+    web.eth.net.getNetworkType()
+    .then((result) => {
+      
+      console.log("network type = ", result);
+    });
 
-    let yugenObject = new web.eth.Contract(yugenABI, yugenAddress)
+    let yugenObject;
 
-    setYugen(yugenObject);
+    if(isTestNet) {
+      yugenObject = new web.eth.Contract(testYugenABI, testYugenAddress)
+    } else {
+      yugenObject = new web.eth.Contract(yugenABI, yugenAddress)
+    }
 
-    setPrices();
+    yugen = yugenObject;
 
+    await setPrices();
 
-
-    //TODO: uncomment when ready
     getWhitelistAmounts();
 
+    getText();
 
+    getIsPublicMint(yugenObject);
+
+
+  }
+
+  const getIsPublicMint = async (yugenObject) => {
+
+    const isPub = await yugenObject.methods.isPublicMint().call();
+
+    setIsPublicMint(isPub);
 
   }
 
@@ -170,6 +177,7 @@ function App() {
             setDisabled(true);
             
             setupWeb3();
+            connectedWallet = addressArray[0]
 
             return {
               address: addressArray[0],
@@ -194,9 +202,6 @@ function App() {
 
   const onClickConnect = async () => {
     try {
-        // Disable button when clicked
-        setDisabled(true);
-
         // Note: This part will trigger the MetaMask pop-up if you are either logged out of your wallet or logged in but not connected to any account. 
         // There won't be a pop-up window if you are already connected with an account
         const addressArray = await ethereum.request({ method: 'eth_requestAccounts' });
@@ -207,6 +212,7 @@ function App() {
             setWallet(addressArray[0])
             setBtnText(addressFormatter(addressArray[0]))
             setupWeb3();
+            connectedWallet = addressArray[0];
             return {
               address: addressArray[0],
             };
@@ -225,15 +231,105 @@ function App() {
     }
   };
 
+  const getPrice = (_amountToMint) => {
+
+    let price = 0;
+
+    let amountLeftToMint = _amountToMint;
+
+    if(mintingObject !== null) {
+    
+      for(let i = 1; i <= 2; i++) {
+
+        if(amountLeftToMint === 0) {
+          break;
+        }
+
+        if(i in mintingObject) {
+
+          const obj = mintingObject[i];
+
+          const leftOfType = obj.maxAmount - obj.amountMinted;
+
+          if(leftOfType > 0) {
+
+            amountLeftToMint -= leftOfType;
+
+            let typePrice = 0;
+
+            if(i === 1) {
+              typePrice = mintPassPrice;
+            }
+
+            price += (typePrice * leftOfType)
+
+          }
+
+        }
+
+      }
+
+      if(amountLeftToMint > 0) {
+
+        if(0 in mintingObject) {
+
+          //has whitelist
+          price += (whitelistPrice * amountLeftToMint);
+          amountLeftToMint = 0;
+
+
+        }
+      }
+
+    }
+
+    if(amountLeftToMint > 0 && isPublicMint) {
+
+      price += (amountLeftToMint * publicPrice);
+
+    }
+
+    let etherValue = ethers.utils.formatEther(price.toString());
+
+    console.log("ether value = ", etherValue);
+
+    etherValue = parseFloat(etherValue);
+
+    console.log("ether value = ", etherValue);
+
+    setMintCost(etherValue);
+
+  }
+
   async function getWhitelistAmounts() {
 
     let obj = {};
 
-    if(walletAddress == "") return;
+    
 
-    if(walletAddress in whitelistObject == false) return;
+    if(connectedWallet === "") {
+      console.log("wallet address is none")
+    };
 
-    const walletObject = whitelistObject[walletAddress];
+    console.log("wallet = ", connectedWallet);
+
+    if(connectedWallet in whitelistObject === false) {
+
+      console.log("not in whitelist");
+
+      if(isPublicMint) {
+
+        setMaxAmount(20);
+
+      }
+
+    } else {
+
+      console.log("in whitelist object");
+
+    }
+
+    const walletObject = whitelistObject[connectedWallet];
 
     let max = 0;
 
@@ -241,21 +337,21 @@ function App() {
 
       const str = i.toString();
 
-      if(str in walletObject == false) continue;
+      if(str in walletObject === false) continue;
 
       const amount = walletObject[str];
 
       let amountMinted = 0;
 
-      if(i == 1) {
-        amountMinted = await yugen.methods.MintPassUsed(walletAddress).call();
-      } else if(i == 2) {
-        amountMinted = await yugen.methods.FreeMinted(walletAddress).call();
+      if(i === 1) {
+        amountMinted = await yugen.methods.MintPassUsed(connectedWallet).call();
+      } else if(i === 2) {
+        amountMinted = await yugen.methods.FreeMinted(connectedWallet).call();
       }
 
-      let proof = getHexProof(walletAddress, i);
+      let proof = getHexProof(connectedWallet, i);
 
-      if(i == 0) {
+      if(i === 0) {
         max = 20;
       } else {
         max += (amount - amountMinted);
@@ -268,9 +364,8 @@ function App() {
     if(isPublicMint) max = 20;
 
     setMaxAmount(max);
-    setMintingObject(obj);
+    mintingObject = obj;
     
-
   }
 
   // Wallet listener to handle accounts changes by the user
@@ -296,7 +391,7 @@ function App() {
 
   const Mint = async () => {
 
-    if(walletAddress == "") return;
+    if(walletAddress === "") return;
     if(mintingObject == null) return;
 
     let types = [];
@@ -313,7 +408,7 @@ function App() {
     
     for(let i = 1; i <= 2; i++) {
 
-      if(amountLeftToMint == 0) {
+      if(amountLeftToMint === 0) {
         break;
       }
 
@@ -334,7 +429,7 @@ function App() {
 
           let typePrice = 0;
 
-          if(i == 1) {
+          if(i === 1) {
             typePrice = mintPassPrice;
           }
 
@@ -361,8 +456,6 @@ function App() {
 
 
       }
-
-
     }
 
     if(price > 0) {
@@ -375,11 +468,62 @@ function App() {
 
       await yugen.methods.publicMint(amountLeftToMint).send({value : price});
 
-
     }
   
     //TODO: text
   
+  }
+
+  const getText = () => {
+
+    let text = "";
+
+    for(let i = 1; i <= 2; i++) {
+
+      if(i in whitelistObject === false) continue;
+
+      const obj = whitelistObject[i];
+
+      const numLeftToMint = obj.maxAmount - obj.amountMinted;
+
+      if(numLeftToMint <= 0) continue;
+
+      if(text.length > 0) {
+        text += ", "
+      }
+
+      if(i === 1) {
+
+        text += "Key Pass Mints: ";
+
+      } else {
+        text += "Free Mints: ";
+      }
+
+      text += amountToMint.toString();
+
+    }
+
+    if(0 in whitelistObject) {
+
+      if(text.length > 0) {
+        text += ", "
+      }
+
+      text += "Whitelist Mints: Unlimited";
+
+    } else if(isPublicMint) {
+
+      if(text.length > 0) {
+        text += ", "
+      }
+
+      text += "Public Mints: Unlimited";
+
+    }
+
+    setWhitelistText(text);
+
   }
 
   // Converts any given account address into the following format: 0x1234...6789
@@ -394,8 +538,6 @@ function App() {
 
 
   const generateMerkleTree = async () => {
-
-    const whitelistObject = require("./values/whitelist.json");
 
     let leafArray = []
 
@@ -434,9 +576,7 @@ function App() {
 
     console.log("hexroot: ", merkleTreeRoot);
 
-    setMerkleTree(_merkleTree);
-
-    setWhitelistObject(whitelistObject)
+    merkleTree = _merkleTree;
 
   } 
 
@@ -480,20 +620,35 @@ function App() {
         <div className="mint-content">
           <div className="mint-content-bg"></div>
           <h2 className="mint-title glitched" data-text="Mint YUGEN">Mint YUGEN</h2>
-          <p className="mint-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est.</p>
+          <p className="mint-text">Mint instructions:
+                  Connect to MetaMask wallet by selecting the button. 
+                  Once connected, input the amount of Citizens you’d like to mint.
+
+                  For holders of the Keys of Cyber City, you will be able to mint up to the maximum amount of Citizens depending on how many of each Key is held in the wallet. If your wallet is also Whitelisted, you may then move on to Whitelist minting.
+
+                  Once the Whitelist phase is over, any wallet may mint a Citizen and enter Cyber City!
+
+                  Max Mint Amounts:
+                  Per Stable Key: 3
+                  Per Ionized Key: 2
+                  Whitelist and Public: Unlimited</p>
           <form action="" className="mint-form">
-            <h3 className="mint-form__total">0 eth</h3>
-            <p className="mint-form__text"><span id = "mint-form_text_left">Generated text</span> <span id = "mint-form_text_left">Generated text</span></p>
+            <h3 className="mint-form__total">{mintCost > 0 ? mintCost.toFixed(2) + " Eth" : "0 Eth"}</h3>
+
+            { whitelistText.length > 0 && (
+              <p className="mint-form__text">{whitelistText}</p>
+            )}
             <div className="mint-form__calc">
               <button className="mint-form__minus" onClick={
                 () => {
 
-                  console.log("plus");
+                  console.log("minus");
                   if(amountToMint - 1 < 0) {
                     return;
                   }
 
                   setAmountToMint(amountToMint - 1);
+                  getPrice(amountToMint - 1);
                 }
               }></button>
               <div className="mint-form__count">
@@ -501,18 +656,20 @@ function App() {
               </div>
               <button className="mint-form__plus" onClick={ () => {
 
+
                 console.log("plus");
                 if(amountToMint + 1 > maxAmount) {
                   return;
                 }
 
                 setAmountToMint(amountToMint + 1);
+                getPrice(amountToMint + 1);
 
               }
                 
               }></button>
             </div>
-            <button className="mint-form__button" onClick={walletAddress == "" ? onClickConnect : Mint}>{btnText}</button>
+            <button className="mint-form__button" onClick={isDisabled ? null : walletAddress === "" ? onClickConnect : Mint}>{btnText}</button>
           </form>
         </div>
       </div>
