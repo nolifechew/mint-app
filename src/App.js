@@ -480,12 +480,18 @@ function App() {
         mintingObject = null;
         setupWeb3();
 
-      });
+      }).on("error", function(error) {
+
+        setAmountToMint(0);
+        mintingObject = null;
+        setupWeb3();
+
+      })
 
     } else if(isPublicMint) {
 
       price = (amountLeftToMint * publicPrice);
-      
+
       setWhitelistText("Minting");
 
       await yugen.methods.publicMint(amountLeftToMint).send({from : connectedWallet, value : price}).on('receipt', function(receipt){
@@ -495,7 +501,13 @@ function App() {
         mintingObject = null;
         setupWeb3();
 
-      });
+      }).on("error", function(error) {
+
+        setAmountToMint(0);
+        mintingObject = null;
+        setupWeb3();
+
+      })
 
     }
   
