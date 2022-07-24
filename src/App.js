@@ -391,7 +391,7 @@ function App() {
           setWallet(accounts[0]);
           setBtnText("Mint")
           mintingObject = null;
-          
+
           setupWeb3();
 
         } else {
@@ -488,7 +488,19 @@ function App() {
       console.log("maxAmounts: ", maxAmounts);
       console.log("proofs: ", proofs);
 
-      await yugen.methods.whitelistMint(proofs, amounts, types, maxAmounts).send({from : connectedWallet, value : price});
+      setWhitelistText("Minting");
+
+      await yugen.methods.whitelistMint(proofs, amounts, types, maxAmounts).send({from : connectedWallet, value : price}).on('receipt', function(receipt){
+        console.log('receipt');
+
+        setAmountToMint(0);
+        
+        mintingObject = null;
+        setupWeb3();
+
+      });
+
+      
 
     } else if(isPublicMint) {
 
